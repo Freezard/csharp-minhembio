@@ -1,2 +1,0 @@
-E:\Programmering\C#\csharp-minhembio\MinhembioStats\bin\Debug\MinhembioStats.exe.config
-E:\Programmering\C#\csharp-minhembio\MinhembioStats\obj\x86\Debug\MinhembioStats.csproj.ResolveComReference.cache

@@ -8,6 +8,7 @@ using System.Text.RegularExpressions;
 using System.Net;
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
+using HtmlAgilityPack;
 
 namespace MinhembioStats
 {
@@ -54,16 +55,29 @@ namespace MinhembioStats
         // Finds and returns all review ids on the net
         private ArrayList getAllReviews()
         {
-            string webContents = getPageSource("http://www.minhembio.com/spelrec");
+            string webContents = "http://www.minhembio.com/spelrec/sida/";
 
-            string expr = "<a href=\"/spelrec/(\\d\\d\\d\\d)\" class=\"litenrubrik\">";
-
-            MatchCollection matches = Regex.Matches(webContents, expr);
+            HtmlWeb hw = new HtmlWeb();
+            HtmlAgilityPack.HtmlDocument doc = hw.Load(webContents);
 
             ArrayList list = new ArrayList();
+            
+            HtmlNode lol = doc.DocumentNode.SelectSingleNode("//div[@id='artikel_lista']");
+            HtmlNode sidor = lol.SelectSingleNode("..//div[@class='pagenavarea']");
+            string sidorText = sidor.InnerText.Split('&')[0];
 
-            for (int i = matches.Count - 1; i >= 0; i--)
-                list.Add(matches[i].Groups[1].Value);
+            for (int i = 1; i <= 1; i++)
+            {
+                doc = hw.Load(webContents + i);
+
+                lol = doc.DocumentNode.SelectSingleNode("//div[@id='artikel_lista']");
+
+                foreach (HtmlNode node in lol.SelectNodes("..//a[@class='litenrubrik']"))
+                {
+                    HtmlAttribute att = node.Attributes["href"];
+                    list.Add(Regex.Split(att.Value, @"^\D*")[1]);
+                }
+            }
 
             return list;
         }
@@ -95,38 +109,57 @@ namespace MinhembioStats
                 if (reviews.containsGame(id))
                     return false;
 
-                string webContents = getPageSource("http://www.minhembio.com/spelrec/" + id);
+                string webContents = "http://www.minhembio.com/spelrec/" + id;
 
+                HtmlWeb hw = new HtmlWeb();
+                HtmlAgilityPack.HtmlDocument doc = hw.Load(webContents);
+                HtmlNode nodeName = doc.DocumentNode.SelectSingleNode("//td[@class='article-head']//h1");
+                HtmlNode nodeVisitors = doc.DocumentNode.SelectSingleNode("//td[@class='article-head']//span");
+                HtmlNode nodeAuthor = doc.DocumentNode.SelectSingleNode("//td[@class='article-head']//a");
+                HtmlNode nodeAuthorOld = doc.DocumentNode.SelectSingleNode("//p[contains(., 'Text av') or contains(.,'Skribent')]");
+
+                int intID = int.Parse(id);
                 string expr;
+                string name;
+                int visitors;
+                string author = "";
 
-                if (int.Parse(id) >= 2140)
-                    expr = "h1>([^<]+)";
-                else if (int.Parse(id) >= 1953)
-                    expr = ">Recension: ([^<]+)";
-                else expr = ">Spelrecension: ([^<]+)";
+                if (intID >= 2140)
+                    name = nodeName.InnerText;
+                else if (intID >= 1953)
+                {
+                    expr = "Recension: ";
+                    name = Regex.Split(nodeName.InnerText, expr)[1];
+                }
+                else
+                {
+                    expr = "Spelrecension: ";
+                    name = Regex.Split(nodeName.InnerText, expr)[1];
+                }
 
-                string expr2 = "(\\d+) besökare";
+                visitors = int.Parse(Regex.Split(nodeVisitors.InnerText, "(\\d+) besökare")[1]);
 
-                
-
-                string name = matchExpr(expr, webContents);
-                if (name == "")
-                    return false;
-                int visitors = int.Parse(matchExpr(expr2, webContents));
-
-                if (int.Parse(id) >= 1954)
-                    expr = "Skribent: ([^<]+)";
-                else if (int.Parse(id) >= 1939)
-                    expr = "Text av: ([^<]+)";
-                else expr = "Text av ([^<]+)";
-
-                string author = matchExpr(expr, webContents);
+                if (intID >= 2343)
+                    author = nodeAuthor.InnerText.Trim();
+                else if (intID == 2304 ||intID == 2065)
+                    author = "Zoiler/Filip_M";
+                else if (intID >= 1954)
+                    author = Regex.Split(nodeAuthorOld.InnerText, "Skribent: ")[1].Trim();
+                else if (intID >= 1939)
+                    author = Regex.Split(nodeAuthorOld.InnerText, "Text av: ")[1];
+                else author = Regex.Split(nodeAuthorOld.InnerText, "Text av ")[1];
 
                 reviews.addGame(id, name, author, DateTime.Today, visitors);
                 return true;
             }
-            catch (FormatException){
-                return false;}
+            catch (FormatException)
+            {
+                return false;
+            }
+            catch (WebException)
+            {
+                return false;
+            }
         }
 
         // Updates information on a single review
@@ -137,10 +170,13 @@ namespace MinhembioStats
                     && date.Key.Day == DateTime.Today.Day)
                     return false;
 
-            string webContents = getPageSource("http://www.minhembio.com/spelrec/" + id);
+            string webContents = "http://www.minhembio.com/spelrec/" + id;
 
-            string expr = "(\\d+) besökare";
-            int visitors = int.Parse(matchExpr(expr, webContents));
+            HtmlWeb hw = new HtmlWeb();
+            HtmlAgilityPack.HtmlDocument doc = hw.Load(webContents);
+
+            HtmlNode nodeVisitors = doc.DocumentNode.SelectSingleNode("//td[@class='article-head']//span");
+            int visitors = int.Parse(Regex.Split(nodeVisitors.InnerText, "(\\d+) besökare")[1]);
 
             reviews.addInformation(id, DateTime.Today, visitors);
             return true;
@@ -285,16 +321,24 @@ namespace MinhembioStats
                         oSheet.Rows[game.Value.getNr() + 1].Font.Color = System.Drawing.Color.Green;
                     else oSheet.Rows[game.Value.getNr() + 1].Font.Color = System.Drawing.Color.Black;
 
+                    int i = 0;
+
                     foreach (KeyValuePair<DateTime, int> visitors in game.Value.getVisitors())
                     {
                         string date = visitors.Key.ToString("yyyy/MM/dd");
                         if (!dates.ContainsKey(date))
                         {
                             dates.Add(date, row);
-                            oSheet.Cells[1, row++] = date;                            
+                            oSheet.Cells[1, row++] = date;
                         }
 
-                        oSheet.Cells[game.Value.getNr() + 1, dates[date]] = visitors.Value;
+                        if (i > 0)
+                        {
+                            int deltaVisitors = visitors.Value - game.Value.getVisitors().Values[i - 1];
+                            oSheet.Cells[game.Value.getNr() + 1, dates[date]] = visitors.Value + " (" + deltaVisitors + ")";
+                        }
+                        else oSheet.Cells[game.Value.getNr() + 1, dates[date]] = visitors.Value;
+                        i++;
                     }
                 }
 
