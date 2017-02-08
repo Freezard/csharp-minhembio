@@ -9,6 +9,7 @@ using System.Net;
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
 using HtmlAgilityPack;
+using System.Configuration;
 
 namespace MinhembioStats
 {
@@ -19,6 +20,7 @@ namespace MinhembioStats
         public mainForm()
         {
             InitializeComponent();
+            initializeRangeControl();
             loadData();
             printReviews();
             printLastUpdated();
@@ -52,34 +54,55 @@ namespace MinhembioStats
             exportExcel();
         }
 
-        // Finds and returns all review ids on the net
-        private ArrayList getAllReviews()
+        // Sets the maximum range to the number of review pages
+        private void initializeRangeControl()
         {
-            string webContents = "http://www.minhembio.com/spelrec/sida/";
+            numericRangeControlPagesClient.Maximum = getPages();
+            rangeControlPages.SelectedRange.Maximum = int.Parse(ConfigurationManager.AppSettings["MaxPage"]);
+            rangeControlPages.SelectedRange.Minimum = int.Parse(ConfigurationManager.AppSettings["MinPage"]);
+        }
+
+        // Returns the number of review pages
+        private int getPages()
+        {
+            string webContents = "http://www.minhembio.com/spelrec";
 
             HtmlWeb hw = new HtmlWeb();
             HtmlAgilityPack.HtmlDocument doc = hw.Load(webContents);
 
-            ArrayList list = new ArrayList();
-            
-            HtmlNode lol = doc.DocumentNode.SelectSingleNode("//div[@id='artikel_lista']");
-            HtmlNode sidor = lol.SelectSingleNode("..//div[@class='pagenavarea']");
-            string sidorText = sidor.InnerText.Split('&')[0];
+            HtmlNode mainNode = doc.DocumentNode.SelectSingleNode("//div[@id='artikel_lista']");
+            HtmlNode pagesNode = mainNode.SelectSingleNode("..//div[@class='pagenavarea']");
+            return int.Parse(pagesNode.InnerText.Split('&')[0]);
+        }
 
-            for (int i = 1; i <= 1; i++)
+        // Finds and returns all review ids on the net
+        private ArrayList getAllReviews()
+        {
+            string webContents = "http://www.minhembio.com/spelrec/sida/";
+            int minPage = (int) rangeControlPages.SelectedRange.Minimum;
+            int maxPage = (int) rangeControlPages.SelectedRange.Maximum;
+
+            HtmlWeb hw = new HtmlWeb();
+            HtmlAgilityPack.HtmlDocument doc = hw.Load(webContents);
+
+            ArrayList reviews = new ArrayList();
+            
+            HtmlNode mainNode = doc.DocumentNode.SelectSingleNode("//div[@id='artikel_lista']");
+
+            for (int i = minPage; i <= maxPage; i++)
             {
                 doc = hw.Load(webContents + i);
 
-                lol = doc.DocumentNode.SelectSingleNode("//div[@id='artikel_lista']");
+                mainNode = doc.DocumentNode.SelectSingleNode("//div[@id='artikel_lista']");
 
-                foreach (HtmlNode node in lol.SelectNodes("..//a[@class='litenrubrik']"))
+                foreach (HtmlNode reviewNode in mainNode.SelectNodes("..//a[@class='litenrubrik']"))
                 {
-                    HtmlAttribute att = node.Attributes["href"];
-                    list.Add(Regex.Split(att.Value, @"^\D*")[1]);
+                    HtmlAttribute attribute = reviewNode.Attributes["href"];
+                    reviews.Add(Regex.Split(attribute.Value, @"^\D*")[1]);
                 }
             }
 
-            return list;
+            return reviews;
         }
 
         // Adds a list of reviews
@@ -152,11 +175,11 @@ namespace MinhembioStats
                 reviews.addGame(id, name, author, DateTime.Today, visitors);
                 return true;
             }
-            catch (FormatException)
+            catch (WebException)
             {
                 return false;
             }
-            catch (WebException)
+            catch (IOException)
             {
                 return false;
             }
@@ -165,21 +188,32 @@ namespace MinhembioStats
         // Updates information on a single review
         private bool updateInformation(string id)
         {
-            foreach (KeyValuePair<DateTime, int> date in reviews.getGame(id).getVisitors())
-                if (date.Key.Year == DateTime.Today.Year && date.Key.Month == DateTime.Today.Month
-                    && date.Key.Day == DateTime.Today.Day)
-                    return false;
+            try
+            {
+                foreach (KeyValuePair<DateTime, int> date in reviews.getGame(id).getVisitors())
+                    if (date.Key.Year == DateTime.Today.Year && date.Key.Month == DateTime.Today.Month
+                        && date.Key.Day == DateTime.Today.Day)
+                        return false;
 
-            string webContents = "http://www.minhembio.com/spelrec/" + id;
+                string webContents = "http://www.minhembio.com/spelrec/" + id;
 
-            HtmlWeb hw = new HtmlWeb();
-            HtmlAgilityPack.HtmlDocument doc = hw.Load(webContents);
+                HtmlWeb hw = new HtmlWeb();
+                HtmlAgilityPack.HtmlDocument doc = hw.Load(webContents);
 
-            HtmlNode nodeVisitors = doc.DocumentNode.SelectSingleNode("//td[@class='article-head']//span");
-            int visitors = int.Parse(Regex.Split(nodeVisitors.InnerText, "(\\d+) besökare")[1]);
+                HtmlNode nodeVisitors = doc.DocumentNode.SelectSingleNode("//td[@class='article-head']//span");
+                int visitors = int.Parse(Regex.Split(nodeVisitors.InnerText, "(\\d+) besökare")[1]);
 
-            reviews.addInformation(id, DateTime.Today, visitors);
-            return true;
+                reviews.addInformation(id, DateTime.Today, visitors);
+                return true;
+            }
+            catch (WebException)
+            {
+                return false;
+            }
+            catch (IOException)
+            {
+                return false;
+            }
         }
 
         // Updates information on every review
@@ -265,14 +299,25 @@ namespace MinhembioStats
             }
         }
 
-        // Saves data to disk
+        // Saves data to disk and config
         private void saveData()
         {
+            // Save review data
             Stream stream = File.Open("mhstats.dat", FileMode.Create);
             BinaryFormatter bformatter = new BinaryFormatter();
 
             bformatter.Serialize(stream, reviews);
             stream.Close();
+
+            // Save config
+            Configuration configManager = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
+            KeyValueConfigurationCollection confCollection = configManager.AppSettings.Settings;
+
+           confCollection["MinPage"].Value = rangeControlPages.SelectedRange.Minimum.ToString();
+           confCollection["MaxPage"].Value = rangeControlPages.SelectedRange.Maximum.ToString();
+
+           configManager.Save(ConfigurationSaveMode.Modified);
+           ConfigurationManager.RefreshSection(configManager.AppSettings.SectionInformation.Name);
         }
 
         // Loads data from disk

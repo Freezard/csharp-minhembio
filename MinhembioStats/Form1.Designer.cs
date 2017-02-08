@@ -36,6 +36,9 @@
             this.labelLastUpdated = new System.Windows.Forms.Label();
             this.labelMostVisitors = new System.Windows.Forms.Label();
             this.labelLeastVisitors = new System.Windows.Forms.Label();
+            this.rangeControlPages = new DevExpress.XtraEditors.RangeControl();
+            this.numericRangeControlPagesClient = new DevExpress.XtraEditors.NumericRangeControlClient();
+            ((System.ComponentModel.ISupportInitialize)(this.rangeControlPages)).BeginInit();
             this.SuspendLayout();
             // 
             // listBox
@@ -58,7 +61,7 @@
             // 
             // buttonUpdateAllGames
             // 
-            this.buttonUpdateAllGames.Location = new System.Drawing.Point(300, 209);
+            this.buttonUpdateAllGames.Location = new System.Drawing.Point(300, 171);
             this.buttonUpdateAllGames.Name = "buttonUpdateAllGames";
             this.buttonUpdateAllGames.Size = new System.Drawing.Size(140, 23);
             this.buttonUpdateAllGames.TabIndex = 5;
@@ -68,7 +71,7 @@
             // 
             // progressBar
             // 
-            this.progressBar.Location = new System.Drawing.Point(300, 238);
+            this.progressBar.Location = new System.Drawing.Point(300, 200);
             this.progressBar.Name = "progressBar";
             this.progressBar.Size = new System.Drawing.Size(140, 12);
             this.progressBar.TabIndex = 6;
@@ -77,7 +80,7 @@
             // labelLastUpdated
             // 
             this.labelLastUpdated.AutoSize = true;
-            this.labelLastUpdated.Location = new System.Drawing.Point(297, 170);
+            this.labelLastUpdated.Location = new System.Drawing.Point(297, 132);
             this.labelLastUpdated.Name = "labelLastUpdated";
             this.labelLastUpdated.Size = new System.Drawing.Size(103, 13);
             this.labelLastUpdated.TabIndex = 7;
@@ -86,7 +89,7 @@
             // labelMostVisitors
             // 
             this.labelMostVisitors.AutoSize = true;
-            this.labelMostVisitors.Location = new System.Drawing.Point(292, 48);
+            this.labelMostVisitors.Location = new System.Drawing.Point(297, 48);
             this.labelMostVisitors.Name = "labelMostVisitors";
             this.labelMostVisitors.Size = new System.Drawing.Size(99, 13);
             this.labelMostVisitors.TabIndex = 8;
@@ -96,18 +99,35 @@
             // labelLeastVisitors
             // 
             this.labelLeastVisitors.AutoSize = true;
-            this.labelLeastVisitors.Location = new System.Drawing.Point(292, 90);
+            this.labelLeastVisitors.Location = new System.Drawing.Point(297, 90);
             this.labelLeastVisitors.Name = "labelLeastVisitors";
             this.labelLeastVisitors.Size = new System.Drawing.Size(102, 13);
             this.labelLeastVisitors.TabIndex = 9;
             this.labelLeastVisitors.Text = "Minst nya besökare:";
             this.labelLeastVisitors.Visible = false;
             // 
+            // rangeControlPages
+            // 
+            this.rangeControlPages.Client = this.numericRangeControlPagesClient;
+            this.rangeControlPages.Location = new System.Drawing.Point(300, 218);
+            this.rangeControlPages.Name = "rangeControlPages";
+            this.rangeControlPages.SelectionType = DevExpress.XtraEditors.RangeControlSelectionType.Flag;
+            this.rangeControlPages.ShowZoomScrollBar = false;
+            this.rangeControlPages.Size = new System.Drawing.Size(140, 32);
+            this.rangeControlPages.TabIndex = 10;
+            this.rangeControlPages.Text = "rangeControlPages";
+            // 
+            // numericRangeControlPagesClient
+            // 
+            this.numericRangeControlPagesClient.Minimum = 1;
+            this.numericRangeControlPagesClient.RangeControl = this.rangeControlPages;
+            // 
             // mainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(452, 262);
+            this.ClientSize = new System.Drawing.Size(452, 261);
+            this.Controls.Add(this.rangeControlPages);
             this.Controls.Add(this.labelLeastVisitors);
             this.Controls.Add(this.labelMostVisitors);
             this.Controls.Add(this.labelLastUpdated);
@@ -121,6 +141,7 @@
             this.MinimumSize = new System.Drawing.Size(468, 300);
             this.Name = "mainForm";
             this.Text = "Minhembio Statistik";
+            ((System.ComponentModel.ISupportInitialize)(this.rangeControlPages)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -135,6 +156,8 @@
         private System.Windows.Forms.Label labelLastUpdated;
         private System.Windows.Forms.Label labelMostVisitors;
         private System.Windows.Forms.Label labelLeastVisitors;
+        private DevExpress.XtraEditors.RangeControl rangeControlPages;
+        private DevExpress.XtraEditors.NumericRangeControlClient numericRangeControlPagesClient;
     }
 }
 
