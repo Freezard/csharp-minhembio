@@ -10,6 +10,7 @@ using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
 using HtmlAgilityPack;
 using System.Configuration;
+using DevComponents.DotNetBar;
 
 namespace MinhembioStats
 {
@@ -57,9 +58,9 @@ namespace MinhembioStats
         // Sets the maximum range to the number of review pages
         private void initializeRangeControl()
         {
-            numericRangeControlPagesClient.Maximum = getPages();
-            rangeControlPages.SelectedRange.Maximum = int.Parse(ConfigurationManager.AppSettings["MaxPage"]);
-            rangeControlPages.SelectedRange.Minimum = int.Parse(ConfigurationManager.AppSettings["MinPage"]);
+            rangeSlider.Maximum = getPages();
+            rangeSlider.Value = new RangeValue(int.Parse(ConfigurationManager.AppSettings["MinPage"]),
+                int.Parse(ConfigurationManager.AppSettings["MaxPage"]));
         }
 
         // Returns the number of review pages
@@ -79,8 +80,8 @@ namespace MinhembioStats
         private ArrayList getAllReviews()
         {
             string webContents = "http://www.minhembio.com/spelrec/sida/";
-            int minPage = (int) rangeControlPages.SelectedRange.Minimum;
-            int maxPage = (int) rangeControlPages.SelectedRange.Maximum;
+            int minPage = rangeSlider.Value.Min;
+            int maxPage = rangeSlider.Value.Max;
 
             HtmlWeb hw = new HtmlWeb();
             HtmlAgilityPack.HtmlDocument doc = hw.Load(webContents);
@@ -313,8 +314,8 @@ namespace MinhembioStats
             Configuration configManager = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
             KeyValueConfigurationCollection confCollection = configManager.AppSettings.Settings;
 
-           confCollection["MinPage"].Value = rangeControlPages.SelectedRange.Minimum.ToString();
-           confCollection["MaxPage"].Value = rangeControlPages.SelectedRange.Maximum.ToString();
+           confCollection["MinPage"].Value = rangeSlider.Value.Min.ToString();
+           confCollection["MaxPage"].Value = rangeSlider.Value.Max.ToString();
 
            configManager.Save(ConfigurationSaveMode.Modified);
            ConfigurationManager.RefreshSection(configManager.AppSettings.SectionInformation.Name);

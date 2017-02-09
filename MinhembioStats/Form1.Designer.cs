@@ -36,9 +36,7 @@
             this.labelLastUpdated = new System.Windows.Forms.Label();
             this.labelMostVisitors = new System.Windows.Forms.Label();
             this.labelLeastVisitors = new System.Windows.Forms.Label();
-            this.rangeControlPages = new DevExpress.XtraEditors.RangeControl();
-            this.numericRangeControlPagesClient = new DevExpress.XtraEditors.NumericRangeControlClient();
-            ((System.ComponentModel.ISupportInitialize)(this.rangeControlPages)).BeginInit();
+            this.rangeSlider = new DevComponents.DotNetBar.Controls.RangeSlider();
             this.SuspendLayout();
             // 
             // listBox
@@ -61,7 +59,7 @@
             // 
             // buttonUpdateAllGames
             // 
-            this.buttonUpdateAllGames.Location = new System.Drawing.Point(300, 171);
+            this.buttonUpdateAllGames.Location = new System.Drawing.Point(300, 178);
             this.buttonUpdateAllGames.Name = "buttonUpdateAllGames";
             this.buttonUpdateAllGames.Size = new System.Drawing.Size(140, 23);
             this.buttonUpdateAllGames.TabIndex = 5;
@@ -71,7 +69,7 @@
             // 
             // progressBar
             // 
-            this.progressBar.Location = new System.Drawing.Point(300, 200);
+            this.progressBar.Location = new System.Drawing.Point(300, 207);
             this.progressBar.Name = "progressBar";
             this.progressBar.Size = new System.Drawing.Size(140, 12);
             this.progressBar.TabIndex = 6;
@@ -80,7 +78,7 @@
             // labelLastUpdated
             // 
             this.labelLastUpdated.AutoSize = true;
-            this.labelLastUpdated.Location = new System.Drawing.Point(297, 132);
+            this.labelLastUpdated.Location = new System.Drawing.Point(297, 139);
             this.labelLastUpdated.Name = "labelLastUpdated";
             this.labelLastUpdated.Size = new System.Drawing.Size(103, 13);
             this.labelLastUpdated.TabIndex = 7;
@@ -106,28 +104,30 @@
             this.labelLeastVisitors.Text = "Minst nya besökare:";
             this.labelLeastVisitors.Visible = false;
             // 
-            // rangeControlPages
+            // rangeSlider
             // 
-            this.rangeControlPages.Client = this.numericRangeControlPagesClient;
-            this.rangeControlPages.Location = new System.Drawing.Point(300, 218);
-            this.rangeControlPages.Name = "rangeControlPages";
-            this.rangeControlPages.SelectionType = DevExpress.XtraEditors.RangeControlSelectionType.Flag;
-            this.rangeControlPages.ShowZoomScrollBar = false;
-            this.rangeControlPages.Size = new System.Drawing.Size(140, 32);
-            this.rangeControlPages.TabIndex = 10;
-            this.rangeControlPages.Text = "rangeControlPages";
+            this.rangeSlider.BackColor = System.Drawing.SystemColors.Control;
             // 
-            // numericRangeControlPagesClient
             // 
-            this.numericRangeControlPagesClient.Minimum = 1;
-            this.numericRangeControlPagesClient.RangeControl = this.rangeControlPages;
+            // 
+            this.rangeSlider.BackgroundStyle.CornerType = DevComponents.DotNetBar.eCornerType.Square;
+            this.rangeSlider.FocusCuesEnabled = false;
+            this.rangeSlider.Location = new System.Drawing.Point(300, 225);
+            this.rangeSlider.Minimum = 1;
+            this.rangeSlider.Name = "rangeSlider";
+            this.rangeSlider.RangeTooltipFormat = "Min: {0} - Max: {1}";
+            this.rangeSlider.RangeValueColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(192)))), ((int)(((byte)(128)))));
+            this.rangeSlider.Size = new System.Drawing.Size(140, 24);
+            this.rangeSlider.Style = DevComponents.DotNetBar.eDotNetBarStyle.StyleManagerControlled;
+            this.rangeSlider.TabIndex = 11;
+            this.rangeSlider.Value = new DevComponents.DotNetBar.RangeValue(0, 10);
             // 
             // mainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(452, 261);
-            this.Controls.Add(this.rangeControlPages);
+            this.Controls.Add(this.rangeSlider);
             this.Controls.Add(this.labelLeastVisitors);
             this.Controls.Add(this.labelMostVisitors);
             this.Controls.Add(this.labelLastUpdated);
@@ -141,7 +141,6 @@
             this.MinimumSize = new System.Drawing.Size(468, 300);
             this.Name = "mainForm";
             this.Text = "Minhembio Statistik";
-            ((System.ComponentModel.ISupportInitialize)(this.rangeControlPages)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -155,9 +154,8 @@
         private System.Windows.Forms.ProgressBar progressBar;
         private System.Windows.Forms.Label labelLastUpdated;
         private System.Windows.Forms.Label labelMostVisitors;
-        private System.Windows.Forms.Label labelLeastVisitors;
-        private DevExpress.XtraEditors.RangeControl rangeControlPages;
-        private DevExpress.XtraEditors.NumericRangeControlClient numericRangeControlPagesClient;
+        private System.Windows.Forms.Label labelLeastVisitors;        
+        private DevComponents.DotNetBar.Controls.RangeSlider rangeSlider;
     }
 }
 
