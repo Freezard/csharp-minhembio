@@ -5,27 +5,25 @@ using System.Collections.Generic;
 namespace MinhembioStats
 {
     [Serializable()]
-    public class Game
+    public class Review
     {
         private string id;
-        private int nr;
         private string name;
         private string author;
         private SortedList<DateTime, int> visitors;
 
-        public Game(string id, int nr, string name, string author, DateTime date, int visitors)
+        public Review(string id, string name, string author, DateTime date, int visitors)
         {
             this.id = id;
-            this.nr = nr;
             this.name = name;
             this.author = author;
             this.visitors = new SortedList<DateTime, int>();
             this.visitors.Add(date, visitors);
         }
 
-        public int getNr()
+        public string getId()
         {
-            return nr;
+            return id;
         }
 
         public string getName()
@@ -41,6 +39,11 @@ namespace MinhembioStats
         public void addVisitors(DateTime date, int visitors)
         {
             this.visitors.Add(date, visitors);
+        }
+
+        public void removeVisitors(DateTime date)
+        {
+            this.visitors.Remove(date);
         }
 
         public SortedList<DateTime, int> getVisitors()

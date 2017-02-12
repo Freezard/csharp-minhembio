@@ -16,7 +16,7 @@ namespace MinhembioStats
 {
     public partial class mainForm : Form
     {
-        private Reviews reviews;
+        private MHB reviews;
 
         public mainForm()
         {
@@ -66,44 +66,59 @@ namespace MinhembioStats
         // Returns the number of review pages
         private int getPages()
         {
-            string webContents = "http://www.minhembio.com/spelrec";
+            try
+            {
+                string webContents = "http://www.minhembio.com/spelrec";
 
-            HtmlWeb hw = new HtmlWeb();
-            HtmlAgilityPack.HtmlDocument doc = hw.Load(webContents);
+                HtmlWeb hw = new HtmlWeb();
+                HtmlAgilityPack.HtmlDocument doc = hw.Load(webContents);
 
-            HtmlNode mainNode = doc.DocumentNode.SelectSingleNode("//div[@id='artikel_lista']");
-            HtmlNode pagesNode = mainNode.SelectSingleNode("..//div[@class='pagenavarea']");
-            return int.Parse(pagesNode.InnerText.Split('&')[0]);
+                HtmlNode mainNode = doc.DocumentNode.SelectSingleNode("//div[@id='artikel_lista']");
+                HtmlNode pagesNode = mainNode.SelectSingleNode("..//div[@class='pagenavarea']");
+                return int.Parse(pagesNode.InnerText.Split('&')[0]);
+            }
+            catch (Exception)
+            {
+                return 1;
+            }
         }
 
         // Finds and returns all review ids on the net
         private ArrayList getAllReviews()
         {
-            string webContents = "http://www.minhembio.com/spelrec/sida/";
-            int minPage = rangeSlider.Value.Min;
-            int maxPage = rangeSlider.Value.Max;
-
-            HtmlWeb hw = new HtmlWeb();
-            HtmlAgilityPack.HtmlDocument doc = hw.Load(webContents);
-
-            ArrayList reviews = new ArrayList();
-            
-            HtmlNode mainNode = doc.DocumentNode.SelectSingleNode("//div[@id='artikel_lista']");
-
-            for (int i = minPage; i <= maxPage; i++)
+            try
             {
-                doc = hw.Load(webContents + i);
 
-                mainNode = doc.DocumentNode.SelectSingleNode("//div[@id='artikel_lista']");
+                string webContents = "http://www.minhembio.com/spelrec/sida/";
+                int minPage = rangeSlider.Value.Min;
+                int maxPage = rangeSlider.Value.Max;
 
-                foreach (HtmlNode reviewNode in mainNode.SelectNodes("..//a[@class='litenrubrik']"))
+                HtmlWeb hw = new HtmlWeb();
+                HtmlAgilityPack.HtmlDocument doc = hw.Load(webContents);
+
+                ArrayList reviews = new ArrayList();
+
+                HtmlNode mainNode = doc.DocumentNode.SelectSingleNode("//div[@id='artikel_lista']");
+
+                for (int i = minPage; i <= maxPage; i++)
                 {
-                    HtmlAttribute attribute = reviewNode.Attributes["href"];
-                    reviews.Add(Regex.Split(attribute.Value, @"^\D*")[1]);
-                }
-            }
+                    doc = hw.Load(webContents + i);
 
-            return reviews;
+                    mainNode = doc.DocumentNode.SelectSingleNode("//div[@id='artikel_lista']");
+
+                    foreach (HtmlNode reviewNode in mainNode.SelectNodes("..//a[@class='litenrubrik']"))
+                    {
+                        HtmlAttribute attribute = reviewNode.Attributes["href"];
+                        reviews.Add(Regex.Split(attribute.Value, @"^\D*")[1]);
+                    }
+                }
+
+                return reviews;
+            }
+            catch (Exception)
+            {
+                return new ArrayList();
+            }
         }
 
         // Adds a list of reviews
@@ -130,7 +145,7 @@ namespace MinhembioStats
         {
             try
             {
-                if (reviews.containsGame(id))
+                if (reviews.containsReview(id))
                     return false;
 
                 string webContents = "http://www.minhembio.com/spelrec/" + id;
@@ -173,7 +188,7 @@ namespace MinhembioStats
                     author = Regex.Split(nodeAuthorOld.InnerText, "Text av: ")[1];
                 else author = Regex.Split(nodeAuthorOld.InnerText, "Text av ")[1];
 
-                reviews.addGame(id, name, author, DateTime.Today, visitors);
+                reviews.addReview(id, name, author, DateTime.Today, visitors);
                 return true;
             }
             catch (WebException)
@@ -191,7 +206,7 @@ namespace MinhembioStats
         {
             try
             {
-                foreach (KeyValuePair<DateTime, int> date in reviews.getGame(id).getVisitors())
+                foreach (KeyValuePair<DateTime, int> date in reviews.getReview(id).getVisitors())
                     if (date.Key.Year == DateTime.Today.Year && date.Key.Month == DateTime.Today.Month
                         && date.Key.Day == DateTime.Today.Day)
                         return false;
@@ -204,7 +219,7 @@ namespace MinhembioStats
                 HtmlNode nodeVisitors = doc.DocumentNode.SelectSingleNode("//td[@class='article-head']//span");
                 int visitors = int.Parse(Regex.Split(nodeVisitors.InnerText, "(\\d+) besökare")[1]);
 
-                reviews.addInformation(id, DateTime.Today, visitors);
+                reviews.getReview(id).addVisitors(DateTime.Today, visitors);
                 return true;
             }
             catch (WebException)
@@ -226,24 +241,24 @@ namespace MinhembioStats
             string mostVisitorsGame = "";
             string leastVisitorsGame = "";
             progressBar.Value = 0;
-            progressBar.Maximum = reviews.getAllGames().Count;
+            progressBar.Maximum = reviews.getAllReviews().Count;
             progressBar.Visible = true;
 
-            foreach (KeyValuePair<string, Game> game in reviews.getAllGames())
+            foreach (Review game in reviews.getAllReviews())
             {
-                if (updateInformation(game.Key))
+                if (updateInformation(game.getId()))
                 {
                     gamesUpdated++;
-                    int i = game.Value.getVisitors().Values[game.Value.getVisitors().Count - 1] - game.Value.getVisitors().Values[game.Value.getVisitors().Count - 2];
+                    int i = game.getVisitors().Values[game.getVisitors().Count - 1] - game.getVisitors().Values[game.getVisitors().Count - 2];
                     if (i > mostVisitors)
                     {
                         mostVisitors = i;
-                        mostVisitorsGame = game.Value.getName();
+                        mostVisitorsGame = game.getName();
                     }
                     if (i < leastVisitors)
                     {
                         leastVisitors = i;
-                        leastVisitorsGame = game.Value.getName();
+                        leastVisitorsGame = game.getName();
                     }
                 }
                 progressBar.Value++;
@@ -272,8 +287,8 @@ namespace MinhembioStats
         {
             listBox.Items.Clear();
 
-            foreach (KeyValuePair<string, Game> game in reviews.getAllGames())
-                listBox.Items.Add(game.Value.getName());
+            foreach (Review game in reviews.getAllReviews())
+                listBox.Items.Add(game.getName());
         }
 
         // Returns the page source as a string
@@ -329,11 +344,13 @@ namespace MinhembioStats
                 Stream stream = File.Open("mhstats.dat", FileMode.Open);
                 BinaryFormatter bformatter = new BinaryFormatter();
 
-                reviews = (Reviews)bformatter.Deserialize(stream);
+                reviews = (MHB) bformatter.Deserialize(stream);
                 stream.Close();
             }
-            catch (FileNotFoundException){
-                reviews = new Reviews();}
+            catch (FileNotFoundException)
+            {
+                reviews = new MHB();
+            }
         }
 
         // Exports data to excel
@@ -355,37 +372,41 @@ namespace MinhembioStats
                 Dictionary<string, int> dates = new Dictionary<string, int>();
                 int row = 2;
 
-                foreach (KeyValuePair<string, Game> game in reviews.getAllGames())
-                {                    
-                    oSheet.Cells[game.Value.getNr() + 1, 1] = game.Value.getName();
+                foreach (Review review in reviews.getAllReviews())
+                {
+                    int column = 1;
+
+                    oSheet.Cells[row, column++] = review.getName();
                     
-                    if (game.Value.getAuthor().Equals("Zoiler"))
-                        oSheet.Rows[game.Value.getNr() + 1].Font.Color = System.Drawing.Color.Blue;
-                    else if (game.Value.getAuthor().Equals("Filip_M"))
-                        oSheet.Rows[game.Value.getNr() + 1].Font.Color = System.Drawing.Color.Red;
-                    else if (game.Value.getAuthor().Equals("Freezard"))
-                        oSheet.Rows[game.Value.getNr() + 1].Font.Color = System.Drawing.Color.Green;
-                    else oSheet.Rows[game.Value.getNr() + 1].Font.Color = System.Drawing.Color.Black;
+                    if (review.getAuthor().Equals("Zoiler"))
+                        oSheet.Rows[row].Font.Color = System.Drawing.Color.Blue;
+                    else if (review.getAuthor().Equals("Filip_M"))
+                        oSheet.Rows[row].Font.Color = System.Drawing.Color.Red;
+                    else if (review.getAuthor().Equals("Freezard"))
+                        oSheet.Rows[row].Font.Color = System.Drawing.Color.Green;
+                    else oSheet.Rows[row].Font.Color = System.Drawing.Color.Black;
 
-                    int i = 0;
-
-                    foreach (KeyValuePair<DateTime, int> visitors in game.Value.getVisitors())
+                    foreach (KeyValuePair<DateTime, int> visitors in review.getVisitors())
                     {
                         string date = visitors.Key.ToString("yyyy/MM/dd");
+
                         if (!dates.ContainsKey(date))
                         {
                             dates.Add(date, row);
-                            oSheet.Cells[1, row++] = date;
+                            oSheet.Cells[1, column] = date;
                         }
 
-                        if (i > 0)
+                        if (column > 2)
                         {
-                            int deltaVisitors = visitors.Value - game.Value.getVisitors().Values[i - 1];
-                            oSheet.Cells[game.Value.getNr() + 1, dates[date]] = visitors.Value + " (" + deltaVisitors + ")";
+                            int deltaVisitors = visitors.Value - review.getVisitors().Values[column - 3];
+                            oSheet.Cells[row, dates[date]] = visitors.Value + " (" + deltaVisitors + ")";
                         }
-                        else oSheet.Cells[game.Value.getNr() + 1, dates[date]] = visitors.Value;
-                        i++;
+                        else oSheet.Cells[row, dates[date]] = visitors.Value;
+
+                        column++;
                     }
+
+                    row++;
                 }
 
                 oSheet.Rows.HorizontalAlignment = Excel.XlHAlign.xlHAlignLeft; 
