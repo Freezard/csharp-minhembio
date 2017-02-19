@@ -109,7 +109,7 @@ namespace MinhembioStats
                     foreach (HtmlNode reviewNode in mainNode.SelectNodes("..//a[@class='litenrubrik']"))
                     {
                         HtmlAttribute attribute = reviewNode.Attributes["href"];
-                        reviews.Add(Regex.Split(attribute.Value, @"^\D*")[1]);
+                        reviews.Add(int.Parse(Regex.Split(attribute.Value, @"^\D*")[1]));
                     }
                 }
 
@@ -129,7 +129,7 @@ namespace MinhembioStats
             progressBar.Maximum = list.Count;
             progressBar.Visible = true;
 
-            foreach (string id in list)
+            foreach (int id in list)
             {
                 if (addReview(id))
                     reviewsAdded++;
@@ -141,7 +141,7 @@ namespace MinhembioStats
         }
 
         // Adds a single review
-        private bool addReview(string id)
+        private bool addReview(int id)
         {
             try
             {
@@ -157,15 +157,14 @@ namespace MinhembioStats
                 HtmlNode nodeAuthor = doc.DocumentNode.SelectSingleNode("//td[@class='article-head']//a");
                 HtmlNode nodeAuthorOld = doc.DocumentNode.SelectSingleNode("//p[contains(., 'Text av') or contains(.,'Skribent')]");
 
-                int intID = int.Parse(id);
                 string expr;
                 string name;
                 int visitors;
                 string author = "";
 
-                if (intID >= 2140)
+                if (id >= 2140)
                     name = nodeName.InnerText;
-                else if (intID >= 1953)
+                else if (id >= 1953)
                 {
                     expr = "Recension: ";
                     name = Regex.Split(nodeName.InnerText, expr)[1];
@@ -178,13 +177,13 @@ namespace MinhembioStats
 
                 visitors = int.Parse(Regex.Split(nodeVisitors.InnerText, "(\\d+) besökare")[1]);
 
-                if (intID >= 2343)
+                if (id >= 2343)
                     author = nodeAuthor.InnerText.Trim();
-                else if (intID == 2304 ||intID == 2065)
+                else if (id == 2304 || id == 2065)
                     author = "Zoiler/Filip_M";
-                else if (intID >= 1954)
+                else if (id >= 1954)
                     author = Regex.Split(nodeAuthorOld.InnerText, "Skribent: ")[1].Trim();
-                else if (intID >= 1939)
+                else if (id >= 1939)
                     author = Regex.Split(nodeAuthorOld.InnerText, "Text av: ")[1];
                 else author = Regex.Split(nodeAuthorOld.InnerText, "Text av ")[1];
 
@@ -202,7 +201,7 @@ namespace MinhembioStats
         }
 
         // Updates information on a single review
-        private bool updateInformation(string id)
+        private bool updateInformation(int id)
         {
             try
             {

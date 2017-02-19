@@ -7,12 +7,12 @@ namespace MinhembioStats
     [Serializable()]
     public class Review
     {
-        private string id;
+        private int id;
         private string name;
         private string author;
         private SortedList<DateTime, int> visitors;
 
-        public Review(string id, string name, string author, DateTime date, int visitors)
+        public Review(int id, string name, string author, DateTime date, int visitors)
         {
             this.id = id;
             this.name = name;
@@ -21,7 +21,7 @@ namespace MinhembioStats
             this.visitors.Add(date, visitors);
         }
 
-        public string getId()
+        public int getId()
         {
             return id;
         }

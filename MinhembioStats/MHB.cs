@@ -7,35 +7,35 @@ namespace MinhembioStats
     [Serializable()]
     public class MHB
     {
-        private SortedDictionary<string, Review> reviews;
+        private SortedDictionary<int, Review> reviews;
         private string lastUpdated;
 
         public MHB()
         {
-            reviews = new SortedDictionary<string, Review>(Comparer<string>.Create((x, y) => y.CompareTo(x)));
+            reviews = new SortedDictionary<int, Review>(Comparer<int>.Create((x, y) => y.CompareTo(x)));
         }
-      
-        public void addReview(string id, string name, string author, DateTime date, int visitors)
+
+        public void addReview(int id, string name, string author, DateTime date, int visitors)
         {
             reviews.Add(id, new Review(id, name, author, date, visitors));
         }
 
-        public void removeReview(string id)
+        public void removeReview(int id)
         {
             reviews.Remove(id);
         }
 
-        public bool containsReview(string id)
+        public bool containsReview(int id)
         {
             return reviews.ContainsKey(id);
         }
 
-        public Review getReview(string id)
+        public Review getReview(int id)
         {
             return reviews[id];
         }
 
-        public SortedDictionary<string, Review>.ValueCollection getAllReviews()
+        public SortedDictionary<int, Review>.ValueCollection getAllReviews()
         {
             return reviews.Values;
         }
