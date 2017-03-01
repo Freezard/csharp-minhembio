@@ -72,6 +72,7 @@ namespace MinhembioStats
 
                 HtmlWeb hw = new HtmlWeb();
                 HtmlAgilityPack.HtmlDocument doc = hw.Load(webContents);
+                
 
                 HtmlNode mainNode = doc.DocumentNode.SelectSingleNode("//div[@id='artikel_lista']");
                 HtmlNode pagesNode = mainNode.SelectSingleNode("..//div[@class='pagenavarea']");
@@ -152,6 +153,7 @@ namespace MinhembioStats
 
                 HtmlWeb hw = new HtmlWeb();
                 HtmlAgilityPack.HtmlDocument doc = hw.Load(webContents);
+
                 HtmlNode nodeName = doc.DocumentNode.SelectSingleNode("//td[@class='article-head']//h1");
                 HtmlNode nodeVisitors = doc.DocumentNode.SelectSingleNode("//td[@class='article-head']//span");
                 HtmlNode nodeAuthor = doc.DocumentNode.SelectSingleNode("//td[@class='article-head']//a");
@@ -190,11 +192,7 @@ namespace MinhembioStats
                 reviews.addReview(id, name, author, DateTime.Today, visitors);
                 return true;
             }
-            catch (WebException)
-            {
-                return false;
-            }
-            catch (IOException)
+            catch (Exception)
             {
                 return false;
             }
@@ -217,19 +215,28 @@ namespace MinhembioStats
 
                 HtmlNode nodeVisitors = doc.DocumentNode.SelectSingleNode("//td[@class='article-head']//span");
                 int visitors = int.Parse(Regex.Split(nodeVisitors.InnerText, "(\\d+) besökare")[1]);
-
-                reviews.getReview(id).addVisitors(DateTime.Today, visitors);
+                reviews.updateReview(id, DateTime.Today, visitors);
+                
                 return true;
             }
-            catch (WebException)
-            {
-                return false;
-            }
-            catch (IOException)
+            catch (Exception)
             {
                 return false;
             }
         }
+
+        private HtmlAgilityPack.HtmlDocument GetPageSource(string URL)
+        {
+            WebClient webClient = new WebClient { Encoding = System.Text.Encoding.UTF8 };
+            string strSource = webClient.DownloadString(URL);
+            webClient.Dispose();
+
+            HtmlWeb hw = new HtmlWeb();
+            var doc = new HtmlAgilityPack.HtmlDocument();
+            doc.LoadHtml(URL);
+
+            return doc;
+        }   
 
         // Updates information on every review
         private int updateAllInformation()
@@ -288,16 +295,6 @@ namespace MinhembioStats
 
             foreach (Review game in reviews.getAllReviews())
                 listBox.Items.Add(game.getName());
-        }
-
-        // Returns the page source as a string
-        private string getPageSource(string URL)
-        {
-            WebClient webClient = new WebClient();
-            string strSource = webClient.DownloadString(URL);
-            webClient.Dispose();
-
-            return strSource;
         }
 
         // Matches an expression and returns if successful
@@ -391,8 +388,9 @@ namespace MinhembioStats
 
                         if (!dates.ContainsKey(date))
                         {
-                            dates.Add(date, row);
-                            oSheet.Cells[1, column] = date;
+                            int col = reviews.getUpdates().IndexOf(visitors.Key) + 2;
+                            dates.Add(date, col);
+                            oSheet.Cells[1, col] = date;
                         }
 
                         if (column > 2)
